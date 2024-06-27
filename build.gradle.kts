@@ -3,9 +3,10 @@ plugins {
 	id("io.spring.dependency-management") version "1.1.5"
 	kotlin("jvm") version "1.9.24"
 	kotlin("plugin.spring") version "1.9.24"
+	`maven-publish`
 }
 
-group = "com.vk.romindx"
+group = "com.github.romindx"
 version = "0.0.1"
 
 java {
@@ -16,6 +17,24 @@ java {
 
 repositories {
 	mavenCentral()
+}
+
+publishing {
+	repositories {
+		maven {
+			name = "GitHubPackages"
+			url = uri("https://maven.pkg.github.com/insodet/telegram-authentication-spring")
+			credentials {
+				username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
+				password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
+			}
+		}
+	}
+	publications {
+		register<MavenPublication>("gpr") {
+			from(components["java"])
+		}
+	}
 }
 
 dependencies {
