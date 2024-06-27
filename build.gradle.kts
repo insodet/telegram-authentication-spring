@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
 	id("org.springframework.boot") version "3.3.1"
 	id("io.spring.dependency-management") version "1.1.5"
@@ -7,7 +9,7 @@ plugins {
 }
 
 group = "com.github.romindx"
-version = "1.0"
+version = "1.1"
 
 java {
 	toolchain {
@@ -31,10 +33,20 @@ publishing {
 		}
 	}
 	publications {
+
 		register<MavenPublication>("gpr") {
 			from(components["java"])
+			afterEvaluate {
+				artifact(sourceTask) {
+					classifier = "sources"
+				}
+			}
 		}
 	}
+}
+
+val sourceTask = tasks.register<Jar>("SourcesJar") {
+	from(sourceSets.main.get().allSource)
 }
 
 dependencies {
