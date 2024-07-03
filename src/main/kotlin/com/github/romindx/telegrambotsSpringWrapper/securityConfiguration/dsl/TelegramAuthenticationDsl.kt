@@ -1,26 +1,26 @@
 package com.github.romindx.telegrambotsSpringWrapper.securityConfiguration.dsl
 
 import com.github.romindx.telegrambotsSpringWrapper.authentication.TelegramAuthentication
-import com.github.romindx.telegrambotsSpringWrapper.authentication.TelegramAuthenticationFilter
 import com.github.romindx.telegrambotsSpringWrapper.authentication.handlers.SuccessValidationHandler
 import com.github.romindx.telegrambotsSpringWrapper.authentication.handlers.TelegramBotTokenResolver
 import com.github.romindx.telegrambotsSpringWrapper.securityConfiguration.builders.TelegramAuthenticationBuilder
 import org.springframework.security.config.annotation.web.HttpSecurityDsl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.core.Authentication
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.security.web.util.matcher.RequestMatcher
 
 class TelegramAuthenticationDsl {
-    private var filter: TelegramAuthenticationFilter? = null
+    private var matcher: RequestMatcher? = null
     private var tokenResolver: TelegramBotTokenResolver? = null
     private var successValidationHandler: SuccessValidationHandler? = null
 
     fun addPattern(pattern: String) {
-        filter = TelegramAuthenticationFilter(pattern)
+        matcher = AntPathRequestMatcher(pattern, "POST")
     }
 
     fun addMatcher(matcher: RequestMatcher) {
-        filter = TelegramAuthenticationFilter(matcher)
+        this.matcher = matcher
     }
 
     fun tokenResolver(resolver: TelegramBotTokenResolver) {
@@ -47,7 +47,7 @@ class TelegramAuthenticationDsl {
 
     internal fun get(): TelegramAuthenticationBuilder<HttpSecurity>.() -> Unit =
         {
-            this.filter = this@TelegramAuthenticationDsl.filter
+            this.matcher = this@TelegramAuthenticationDsl.matcher
             tokenResolver?.also { this.tokenResolver(it) }
             successValidationHandler?.also { this.onSuccessValidation(it) }
         }

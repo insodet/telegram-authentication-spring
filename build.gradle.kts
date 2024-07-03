@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
 	id("org.springframework.boot") version "3.3.1"
 	id("io.spring.dependency-management") version "1.1.5"
@@ -9,7 +7,7 @@ plugins {
 }
 
 group = "com.github.romindx"
-version = "1.1"
+version = "1.2"
 
 java {
 	toolchain {
@@ -54,9 +52,12 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+	implementation("org.telegram:telegrambots-longpolling:7.4.2")
+	implementation("org.telegram:telegrambots-client:7.4.2")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 	testImplementation("org.springframework.security:spring-security-test")
+	testImplementation("org.hamcrest:hamcrest-all:1.3")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

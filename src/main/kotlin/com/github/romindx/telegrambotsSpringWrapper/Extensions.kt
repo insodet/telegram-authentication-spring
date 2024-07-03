@@ -1,12 +1,8 @@
 package com.github.romindx.telegrambotsSpringWrapper
 
-import com.github.romindx.telegrambotsSpringWrapper.authentication.TelegramPrincipal
 import java.security.MessageDigest
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-
-
-
 
 internal val String.sha256hash: ByteArray
 	get() {
@@ -24,15 +20,3 @@ internal fun String.hmacSha256(secretKey: ByteArray): ByteArray =
 
 
 internal fun ByteArray.toHexDecimal() = this.fold("") { result, value -> result + "%02x".format(value)}
-
-internal fun Map<String, String>.toCheckString() =
-	this
-		.keys
-		.sorted()
-		.joinToString("\n") { "${it}=${this[it] ?: ""}" }
-
-internal fun TelegramPrincipal.getCheckAttributes() =
-	this
-		.attributes
-		.toMutableMap()
-		.also { it["username"] = this.username }

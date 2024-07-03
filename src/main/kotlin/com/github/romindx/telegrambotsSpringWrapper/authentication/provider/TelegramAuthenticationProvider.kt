@@ -22,7 +22,7 @@ internal class TelegramAuthenticationProvider(
 }
 
 private fun TelegramAuthentication.authenticate(tokenResolver: TelegramBotTokenResolver?) =
-    userType
+    details
         .getAuthenticator()
         .authenticate(
             this,

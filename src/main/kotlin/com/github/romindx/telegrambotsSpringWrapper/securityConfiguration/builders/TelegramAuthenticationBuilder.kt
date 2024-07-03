@@ -5,6 +5,7 @@ import com.github.romindx.telegrambotsSpringWrapper.authentication.TelegramAuthe
 import com.github.romindx.telegrambotsSpringWrapper.authentication.handlers.SuccessValidationHandler
 import com.github.romindx.telegrambotsSpringWrapper.authentication.handlers.TelegramBotTokenResolver
 import com.github.romindx.telegrambotsSpringWrapper.authentication.provider.TelegramAuthenticationProvider
+import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.config.annotation.SecurityConfigurer
 import org.springframework.security.config.annotation.web.HttpSecurityBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -12,22 +13,32 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.core.Authentication
 import org.springframework.security.web.DefaultSecurityFilterChain
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.security.web.util.matcher.RequestMatcher
 
 class TelegramAuthenticationBuilder<H : HttpSecurityBuilder<H>?>()
     : AbstractHttpConfigurer<TelegramAuthenticationBuilder<H>?, H>() {
 
-    constructor(filter: TelegramAuthenticationFilter): this() {
-        this.filter = filter
+    constructor(matcher: RequestMatcher): this() {
+        this.matcher = matcher
     }
 
-    internal var filter: TelegramAuthenticationFilter? = null
+    internal var matcher: RequestMatcher? = null
     private var tokenResolver: TelegramBotTokenResolver? = null
     private var successValidationHandler: SuccessValidationHandler? = null
 
     override fun configure(builder: H) {
-        builder?.authenticationProvider(TelegramAuthenticationProvider(tokenResolver, successValidationHandler))
-        builder?.addFilterBefore(filter, BasicAuthenticationFilter::class.java)
+        builder?.also { http ->
+            http.authenticationProvider(TelegramAuthenticationProvider(tokenResolver, successValidationHandler))
+            val authenticationManager = http
+                .getSharedObject(AuthenticationManager::class.java)
+            matcher?.also {
+                http.addFilterBefore(
+                    TelegramAuthenticationFilter(it, authenticationManager),
+                    BasicAuthenticationFilter::class.java
+                )
+            }
+        }
     }
 
     fun tokenResolver(resolver: TelegramBotTokenResolver) =
@@ -49,16 +60,15 @@ class TelegramAuthenticationBuilder<H : HttpSecurityBuilder<H>?>()
             it.successValidationHandler = object: SuccessValidationHandler {
                 override fun onSuccessValidation(authentication: TelegramAuthentication): Authentication =
                     successHandler(authentication)
-
             }
         }
 }
 
 fun HttpSecurity.telegramAuthentication(pattern: String): TelegramAuthenticationBuilder<HttpSecurity>
-= getOrApply(TelegramAuthenticationBuilder(TelegramAuthenticationFilter(pattern)))
+= getOrApply(TelegramAuthenticationBuilder(AntPathRequestMatcher(pattern, "POST")))
 
 fun HttpSecurity.telegramAuthentication(matcher: RequestMatcher): TelegramAuthenticationBuilder<HttpSecurity>
-        = getOrApply(TelegramAuthenticationBuilder(TelegramAuthenticationFilter(matcher)))
+        = getOrApply(TelegramAuthenticationBuilder(matcher))
 
 private fun <C: SecurityConfigurer<DefaultSecurityFilterChain, HttpSecurity>> HttpSecurity.getOrApply(configurer: C) : C =
     getConfigurer(configurer.javaClass) ?: this.apply(configurer)
