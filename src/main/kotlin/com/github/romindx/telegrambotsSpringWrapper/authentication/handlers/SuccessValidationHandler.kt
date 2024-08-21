@@ -4,5 +4,5 @@ import com.github.romindx.telegrambotsSpringWrapper.authentication.TelegramAuthe
 import org.springframework.security.core.Authentication
 
 interface SuccessValidationHandler {
-    fun onSuccessValidation(authentication: TelegramAuthentication): Authentication
+    fun onSuccessValidation(authentication: TelegramAuthentication): Authentication?
 }

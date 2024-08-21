@@ -15,7 +15,10 @@ internal class TelegramAuthenticationProvider(
     override fun authenticate(authentication: Authentication?): Authentication? =
         (authentication as? TelegramAuthentication)
             ?.authenticate(tokenResolver)
-            ?.let { successHandler?.onSuccessValidation(it) ?: it }
+            ?.let { validAuthentication ->
+                successHandler
+                    ?.let { it.onSuccessValidation(validAuthentication) ?: throw AuthenticationError.ValidationError("Authentication not permitted") } ?: validAuthentication
+            }
 
     override fun supports(authentication: Class<*>?): Boolean =
         authentication?.let { TelegramAuthentication::class.java.isAssignableFrom(it) } ?: false
