@@ -38,9 +38,9 @@ class TelegramAuthenticationDsl {
         }
     }
 
-    fun onSuccessValidation(handler: (TelegramAuthentication)-> Authentication) {
+    fun onSuccessValidation(handler: (TelegramAuthentication)-> Authentication?) {
         this.successValidationHandler = object: SuccessValidationHandler {
-            override fun onSuccessValidation(authentication: TelegramAuthentication): Authentication =
+            override fun onSuccessValidation(authentication: TelegramAuthentication): Authentication? =
                 handler(authentication)
         }
     }

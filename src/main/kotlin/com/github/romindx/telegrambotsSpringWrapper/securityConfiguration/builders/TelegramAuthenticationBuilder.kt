@@ -55,10 +55,10 @@ class TelegramAuthenticationBuilder<H : HttpSecurityBuilder<H>?>()
     fun onSuccessValidation(handler: SuccessValidationHandler) =
         this.also { it.successValidationHandler = handler }
 
-    fun onSuccessValidation(successHandler: (TelegramAuthentication)-> Authentication) =
+    fun onSuccessValidation(successHandler: (TelegramAuthentication)-> Authentication?) =
         this.also {
             it.successValidationHandler = object: SuccessValidationHandler {
-                override fun onSuccessValidation(authentication: TelegramAuthentication): Authentication =
+                override fun onSuccessValidation(authentication: TelegramAuthentication): Authentication? =
                     successHandler(authentication)
             }
         }
