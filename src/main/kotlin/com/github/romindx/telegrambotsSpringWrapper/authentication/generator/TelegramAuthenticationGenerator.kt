@@ -6,10 +6,10 @@ import com.github.romindx.telegrambotsSpringWrapper.authentication.validation.Va
 import jakarta.servlet.http.HttpServletRequest
 
 internal interface TelegramAuthenticationGenerator {
-    fun generate(request: HttpServletRequest): TelegramAuthentication
+    fun generate(request: HttpServletRequest): TelegramAuthentication?
 }
 
-internal fun HttpServletRequest.generateAuthentication(): TelegramAuthentication =
+internal fun HttpServletRequest.generateAuthentication(): TelegramAuthentication? =
     try {
         when  {
             contentType?.contains("application/json", true) ?: false -> JSONGeneratorTelegram().generate(this)
@@ -20,9 +20,10 @@ internal fun HttpServletRequest.generateAuthentication(): TelegramAuthentication
         throw AuthenticationError.DataParsingError(ex.localizedMessage ?: ex.message ?: "")
     }
 
-internal val HttpServletRequest.validationFlow: ValidationFlow
+internal val HttpServletRequest.validationFlow: ValidationFlow?
     get() =
-        when (getHeader("X-Source")?.lowercase() ?: "") {
+        when (this.getParameter("flow")?.lowercase() ?: getHeader("X-Flow")?.lowercase() ?: "") {
             "miniapp" -> ValidationFlow.MiniApp
-            else -> ValidationFlow.LoginForm
+            "loginform" -> ValidationFlow.LoginForm
+            else -> null
         }

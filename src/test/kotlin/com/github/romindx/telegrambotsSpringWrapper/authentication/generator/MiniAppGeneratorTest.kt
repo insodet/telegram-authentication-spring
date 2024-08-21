@@ -20,6 +20,49 @@ class MiniAppGeneratorTest {
     """.trimIndent()
     @Test
     fun jsonAuthenticationGeneratorAndValidationTest() {
+        val request = jsonRequest()
+        Mockito
+            .`when`(request.getHeader("X-Flow"))
+            .thenReturn("MiniApp")
+        val result = JSONGeneratorTelegram().generate(request)
+        authenticationTest(result!!)
+        validationTest(result.validationFlow.getAuthenticator(), result)
+    }
+
+    @Test
+    fun htmlFormAuthenticationGeneratorAndValidationTest() {
+        val request = formRequest()
+        Mockito
+            .`when`(request.getHeader("X-Flow"))
+            .thenReturn("MiniApp")
+        val result = HTMLFormGeneratorTelegram().generate(request)
+        authenticationTest(result!!)
+        validationTest(result.validationFlow.getAuthenticator(), result)
+    }
+
+    @Test
+    fun jsonAuthenticationGeneratorAndValidationWithQueryFlowTest() {
+        val request = jsonRequest()
+        Mockito
+            .`when`(request.getParameter("flow"))
+            .thenReturn("MiniApp")
+        val result = JSONGeneratorTelegram().generate(request)
+        authenticationTest(result!!)
+        validationTest(result.validationFlow.getAuthenticator(), result)
+    }
+
+    @Test
+    fun htmlFormAuthenticationGeneratorAndValidationWithQueryFlowTest() {
+        val request = formRequest()
+        Mockito
+            .`when`(request.getParameter("flow"))
+            .thenReturn("MiniApp")
+        val result = HTMLFormGeneratorTelegram().generate(request)
+        authenticationTest(result!!)
+        validationTest(result.validationFlow.getAuthenticator(), result)
+    }
+
+    private fun jsonRequest(): HttpServletRequest {
         val request = Mockito.mock(HttpServletRequest::class.java)
         val stream = jsonData.byteInputStream()
         Mockito
@@ -34,16 +77,10 @@ class MiniAppGeneratorTest {
                 override fun setReadListener(p0: ReadListener?) {}
 
             })
-        Mockito
-            .`when`(request.getHeader("X-Source"))
-            .thenReturn("MiniApp")
-        val result = JSONGeneratorTelegram().generate(request)
-        authenticationTest(result)
-        validationTest(result.validationFlow.getAuthenticator(), result)
+        return request
     }
 
-    @Test
-    fun htmlFormAuthenticationGeneratorAndValidationTest() {
+    private fun formRequest(): HttpServletRequest {
         val request = Mockito.mock(HttpServletRequest::class.java)
         Mockito.`when`(request.parameterMap)
             .thenReturn(
@@ -57,12 +94,7 @@ class MiniAppGeneratorTest {
                         )
                     }
             )
-        Mockito
-            .`when`(request.getHeader("X-Source"))
-            .thenReturn("MiniApp")
-        val result = HTMLFormGeneratorTelegram().generate(request)
-        authenticationTest(result)
-        validationTest(result.validationFlow.getAuthenticator(), result)
+        return request
     }
 
     private fun validationTest(validator: TelegramAuthenticator, authentication: TelegramAuthentication) {

@@ -23,26 +23,23 @@ class LoginFormGenerationsTests {
 
     @Test
     fun jsonAuthenticationGeneratorAndValidationTest() {
-        val request = Mockito.mock(HttpServletRequest::class.java)
-        val stream = jsonData.byteInputStream()
+        val request = jsonRequest()
         Mockito
-            .`when`(request.inputStream)
-            .thenReturn(object: ServletInputStream() {
-                override fun read(): Int = stream.read()
-
-
-                override fun isFinished(): Boolean = stream.available() <= 0
-
-                override fun isReady(): Boolean = stream.available() > 0
-
-                override fun setReadListener(p0: ReadListener?) {}
-
-            })
-        Mockito
-            .`when`(request.getHeader("X-Source"))
+            .`when`(request.getHeader("X-Flow"))
             .thenReturn("LoginForm")
         val result = JSONGeneratorTelegram().generate(request)
-        authenticationTest(result)
+        authenticationTest(result!!)
+        validationTest(result.validationFlow.getAuthenticator(), result)
+    }
+
+    @Test
+    fun jsonAuthenticationGeneratorAndValidationWithQueryTest() {
+        val request = jsonRequest()
+        Mockito
+            .`when`(request.getParameter("flow"))
+            .thenReturn("LoginForm")
+        val result = JSONGeneratorTelegram().generate(request)
+        authenticationTest(result!!)
         validationTest(result.validationFlow.getAuthenticator(), result)
     }
 
@@ -65,6 +62,42 @@ class LoginFormGenerationsTests {
 
     @Test
     fun htmlFormAuthenticationGeneratorAndValidationTest() {
+        val request = formRequest()
+        Mockito.`when`(request.getHeader("X-Flow")).thenReturn("LoginForm")
+        val authentication = HTMLFormGeneratorTelegram().generate(request)
+        authenticationTest(authentication!!)
+        validationTest(authentication.validationFlow.getAuthenticator(), authentication)
+    }
+
+    @Test
+    fun htmlFormAuthenticationGeneratorAndValidationWithQueryTest() {
+        val request = formRequest()
+        Mockito.`when`(request.getParameter("flow")).thenReturn("LoginForm")
+        val authentication = HTMLFormGeneratorTelegram().generate(request)
+        authenticationTest(authentication!!)
+        validationTest(authentication.validationFlow.getAuthenticator(), authentication)
+    }
+
+    private fun jsonRequest(): HttpServletRequest {
+        val request = Mockito.mock(HttpServletRequest::class.java)
+        val stream = jsonData.byteInputStream()
+        Mockito
+            .`when`(request.inputStream)
+            .thenReturn(object: ServletInputStream() {
+                override fun read(): Int = stream.read()
+
+
+                override fun isFinished(): Boolean = stream.available() <= 0
+
+                override fun isReady(): Boolean = stream.available() > 0
+
+                override fun setReadListener(p0: ReadListener?) {}
+
+            })
+        return request
+    }
+
+    private fun formRequest(): HttpServletRequest {
         val request = Mockito.mock(HttpServletRequest::class.java)
         Mockito.`when`(request.parameterMap)
             .thenReturn(
@@ -78,9 +111,6 @@ class LoginFormGenerationsTests {
                         )
                     }
             )
-        Mockito.`when`(request.getHeader("X-Source")).thenReturn(null)
-        val authentication = HTMLFormGeneratorTelegram().generate(request)
-        authenticationTest(authentication)
-        validationTest(authentication.validationFlow.getAuthenticator(), authentication)
+        return request
     }
 }

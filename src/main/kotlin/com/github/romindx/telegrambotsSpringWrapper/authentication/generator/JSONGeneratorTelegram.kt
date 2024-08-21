@@ -6,12 +6,12 @@ import com.github.romindx.telegrambotsSpringWrapper.authentication.buildAuthenti
 import jakarta.servlet.http.HttpServletRequest
 
 internal class JSONGeneratorTelegram: TelegramAuthenticationGenerator {
-    override fun generate(request: HttpServletRequest): TelegramAuthentication =
+    override fun generate(request: HttpServletRequest): TelegramAuthentication? =
         request.readAuthentication()
 }
 
 private fun HttpServletRequest.readAuthentication() =
-    this.validationFlow.buildAuthentication(
+    this.validationFlow?.buildAuthentication(
         ObjectMapper()
             .readTree(this.inputStream)
             .let {node ->

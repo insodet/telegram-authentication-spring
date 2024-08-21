@@ -5,11 +5,11 @@ import com.github.romindx.telegrambotsSpringWrapper.authentication.buildAuthenti
 import jakarta.servlet.http.HttpServletRequest
 
 internal class HTMLFormGeneratorTelegram: TelegramAuthenticationGenerator {
-    override fun generate(request: HttpServletRequest): TelegramAuthentication =
+    override fun generate(request: HttpServletRequest): TelegramAuthentication? =
         request
             .parameterMap
             .mapValues { entry -> entry.value.joinToString(";") }
             .let {
-                request.validationFlow.buildAuthentication(it)
+                request.validationFlow?.buildAuthentication(it)
             }
 }
