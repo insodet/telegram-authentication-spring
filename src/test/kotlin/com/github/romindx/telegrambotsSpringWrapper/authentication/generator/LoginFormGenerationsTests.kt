@@ -10,7 +10,6 @@ import org.hamcrest.core.Is.`is`
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 import java.net.URI
-import java.net.URLDecoder
 import java.util.*
 
 class LoginFormGenerationsTests {
@@ -23,7 +22,7 @@ class LoginFormGenerationsTests {
 
     @Test
     fun jsonAuthenticationGeneratorAndValidationTest() {
-        val request = jsonRequest()
+        val request = request(jsonData)
         Mockito
             .`when`(request.getHeader("X-Flow"))
             .thenReturn("LoginForm")
@@ -34,7 +33,7 @@ class LoginFormGenerationsTests {
 
     @Test
     fun jsonAuthenticationGeneratorAndValidationWithQueryTest() {
-        val request = jsonRequest()
+        val request = request(jsonData)
         Mockito
             .`when`(request.getParameter("flow"))
             .thenReturn("LoginForm")
@@ -62,7 +61,7 @@ class LoginFormGenerationsTests {
 
     @Test
     fun htmlFormAuthenticationGeneratorAndValidationTest() {
-        val request = formRequest()
+        val request = request(formEncoded)
         Mockito.`when`(request.getHeader("X-Flow")).thenReturn("LoginForm")
         val authentication = HTMLFormGeneratorTelegram().generate(request)
         authenticationTest(authentication!!)
@@ -71,16 +70,16 @@ class LoginFormGenerationsTests {
 
     @Test
     fun htmlFormAuthenticationGeneratorAndValidationWithQueryTest() {
-        val request = formRequest()
+        val request = request(formEncoded)
         Mockito.`when`(request.getParameter("flow")).thenReturn("LoginForm")
         val authentication = HTMLFormGeneratorTelegram().generate(request)
         authenticationTest(authentication!!)
         validationTest(authentication.validationFlow.getAuthenticator(), authentication)
     }
 
-    private fun jsonRequest(): HttpServletRequest {
+    private fun request(body: String): HttpServletRequest {
         val request = Mockito.mock(HttpServletRequest::class.java)
-        val stream = jsonData.byteInputStream()
+        val stream = body.byteInputStream()
         Mockito
             .`when`(request.inputStream)
             .thenReturn(object: ServletInputStream() {
@@ -94,23 +93,6 @@ class LoginFormGenerationsTests {
                 override fun setReadListener(p0: ReadListener?) {}
 
             })
-        return request
-    }
-
-    private fun formRequest(): HttpServletRequest {
-        val request = Mockito.mock(HttpServletRequest::class.java)
-        Mockito.`when`(request.parameterMap)
-            .thenReturn(
-                formEncoded
-                    .split("&")
-                    .associate { pair ->
-                        val keyVal = pair.split("=")
-                        Pair<String, Array<String>>(
-                            URLDecoder.decode(keyVal.firstOrNull() ?: "", Charsets.UTF_8),
-                            arrayOf(URLDecoder.decode(keyVal.getOrNull(1) ?: "", Charsets.UTF_8))
-                        )
-                    }
-            )
         return request
     }
 }

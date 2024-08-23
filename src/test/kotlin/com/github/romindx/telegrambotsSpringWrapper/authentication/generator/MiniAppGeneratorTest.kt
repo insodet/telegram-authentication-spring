@@ -9,18 +9,17 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
-import java.net.URLDecoder
 import java.util.*
 
 class MiniAppGeneratorTest {
 
-    val formData = "query_id=AAGJRCMDAQAAAIlEIwMfLofu&user=%7B%22id%22%3A2200126601%2C%22first_name%22%3A%22%D0%A0%D1%83%D0%B1%D0%B8%D0%BA%22%2C%22last_name%22%3A%22%D0%93%D0%BE%D0%BB%D0%BE%D0%B2%D0%B8%D0%BD%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%7D&auth_date=1720027177&hash=a07f96e3f2675a002ff059e9de0e4b4f79f571ec502c914a5cb81653726596b5"
-    val jsonData = """
+    private val formData = "query_id=AAGJRCMDAQAAAIlEIwMfLofu&user=%7B%22id%22%3A2200126601%2C%22first_name%22%3A%22%D0%A0%D1%83%D0%B1%D0%B8%D0%BA%22%2C%22last_name%22%3A%22%D0%93%D0%BE%D0%BB%D0%BE%D0%B2%D0%B8%D0%BD%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%7D&auth_date=1720027177&hash=a07f96e3f2675a002ff059e9de0e4b4f79f571ec502c914a5cb81653726596b5"
+    private val jsonData = """
         {"query_id":"AAGJRCMDAQAAAIlEIwMfLofu","user":{"id":2200126601,"first_name":"Рубик","last_name":"Головин","language_code":"en","allows_write_to_pm":true},"auth_date":"1720027177","hash":"a07f96e3f2675a002ff059e9de0e4b4f79f571ec502c914a5cb81653726596b5"}
     """.trimIndent()
     @Test
     fun jsonAuthenticationGeneratorAndValidationTest() {
-        val request = jsonRequest()
+        val request = request(jsonData)
         Mockito
             .`when`(request.getHeader("X-Flow"))
             .thenReturn("MiniApp")
@@ -31,7 +30,7 @@ class MiniAppGeneratorTest {
 
     @Test
     fun htmlFormAuthenticationGeneratorAndValidationTest() {
-        val request = formRequest()
+        val request = request(formData)
         Mockito
             .`when`(request.getHeader("X-Flow"))
             .thenReturn("MiniApp")
@@ -42,7 +41,7 @@ class MiniAppGeneratorTest {
 
     @Test
     fun jsonAuthenticationGeneratorAndValidationWithQueryFlowTest() {
-        val request = jsonRequest()
+        val request = request(jsonData)
         Mockito
             .`when`(request.getParameter("flow"))
             .thenReturn("MiniApp")
@@ -53,7 +52,7 @@ class MiniAppGeneratorTest {
 
     @Test
     fun htmlFormAuthenticationGeneratorAndValidationWithQueryFlowTest() {
-        val request = formRequest()
+        val request = request(formData)
         Mockito
             .`when`(request.getParameter("flow"))
             .thenReturn("MiniApp")
@@ -62,9 +61,9 @@ class MiniAppGeneratorTest {
         validationTest(result.validationFlow.getAuthenticator(), result)
     }
 
-    private fun jsonRequest(): HttpServletRequest {
+    private fun request(body: String): HttpServletRequest {
         val request = Mockito.mock(HttpServletRequest::class.java)
-        val stream = jsonData.byteInputStream()
+        val stream = body.byteInputStream()
         Mockito
             .`when`(request.inputStream)
             .thenReturn(object: ServletInputStream() {
@@ -77,23 +76,6 @@ class MiniAppGeneratorTest {
                 override fun setReadListener(p0: ReadListener?) {}
 
             })
-        return request
-    }
-
-    private fun formRequest(): HttpServletRequest {
-        val request = Mockito.mock(HttpServletRequest::class.java)
-        Mockito.`when`(request.parameterMap)
-            .thenReturn(
-                formData
-                    .split("&")
-                    .associate { pair ->
-                        val keyVal = pair.split("=")
-                        Pair<String, Array<String>>(
-                            URLDecoder.decode(keyVal.firstOrNull() ?: "", Charsets.UTF_8),
-                            arrayOf(URLDecoder.decode(keyVal.getOrNull(1) ?: "", Charsets.UTF_8))
-                        )
-                    }
-            )
         return request
     }
 
