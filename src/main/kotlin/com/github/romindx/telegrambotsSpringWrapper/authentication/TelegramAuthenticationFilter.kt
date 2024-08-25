@@ -12,6 +12,10 @@ class TelegramAuthenticationFilter internal constructor(
     matcher: RequestMatcher,
     authManager: AuthenticationManager
 ): AbstractAuthenticationProcessingFilter(matcher, authManager) {
+
+    init {
+        setAuthenticationSuccessHandler { _, _, _ -> }
+    }
     override fun attemptAuthentication(request: HttpServletRequest?, response: HttpServletResponse?): Authentication =
         request
             ?.generateAuthentication()
