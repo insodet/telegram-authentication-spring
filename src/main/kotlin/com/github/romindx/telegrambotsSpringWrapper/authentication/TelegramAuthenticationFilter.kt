@@ -1,24 +1,35 @@
 package com.github.romindx.telegrambotsSpringWrapper.authentication
 
 import com.github.romindx.telegrambotsSpringWrapper.authentication.generator.generateAuthentication
+import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.authentication.AuthenticationManager
-import org.springframework.security.core.Authentication
-import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.util.matcher.RequestMatcher
+import org.springframework.web.filter.OncePerRequestFilter
 
-class TelegramAuthenticationFilter internal constructor(
-    matcher: RequestMatcher,
-    authManager: AuthenticationManager
-): AbstractAuthenticationProcessingFilter(matcher, authManager) {
-
-    init {
-        setAuthenticationSuccessHandler { _, _, _ -> }
+class TelegramAuthenticationFilter(
+    private val matcher: RequestMatcher,
+    private val authManager: AuthenticationManager
+): OncePerRequestFilter() {
+    override fun doFilterInternal(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        filterChain: FilterChain
+    ) {
+        if (matcher.matches(request)) {
+            request
+                .generateAuthentication()
+                ?.let { authManager.authenticate(it) }
+                ?.let {
+                    if (it.isAuthenticated) {
+                        SecurityContextHolder.getContext().authentication = it
+                    }
+                }
+                ?: throw AuthenticationError.UnexpectedError("Request can't be null")
+        }
+        filterChain.doFilter(request, response)
     }
-    override fun attemptAuthentication(request: HttpServletRequest?, response: HttpServletResponse?): Authentication =
-        request
-            ?.generateAuthentication()
-            ?.let { authenticationManager?.authenticate(it) }
-            ?: throw AuthenticationError.UnexpectedError("Request can't be null")
+
 }
