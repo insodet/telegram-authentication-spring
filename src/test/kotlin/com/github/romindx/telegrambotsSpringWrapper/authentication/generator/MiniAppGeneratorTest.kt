@@ -25,7 +25,7 @@ class MiniAppGeneratorTest {
             .thenReturn("MiniApp")
         val result = JSONGeneratorTelegram().generate(request)
         authenticationTest(result!!)
-        validationTest(result.validationFlow.getAuthenticator(), result)
+        validationTest(result.details.flow.getAuthenticator(), result)
     }
 
     @Test
@@ -36,7 +36,7 @@ class MiniAppGeneratorTest {
             .thenReturn("MiniApp")
         val result = HTMLFormGeneratorTelegram().generate(request)
         authenticationTest(result!!)
-        validationTest(result.validationFlow.getAuthenticator(), result)
+        validationTest(result.details.flow.getAuthenticator(), result)
     }
 
     @Test
@@ -47,7 +47,7 @@ class MiniAppGeneratorTest {
             .thenReturn("MiniApp")
         val result = JSONGeneratorTelegram().generate(request)
         authenticationTest(result!!)
-        validationTest(result.validationFlow.getAuthenticator(), result)
+        validationTest(result.details.flow.getAuthenticator(), result)
     }
 
     @Test
@@ -58,7 +58,7 @@ class MiniAppGeneratorTest {
             .thenReturn("MiniApp")
         val result = HTMLFormGeneratorTelegram().generate(request)
         authenticationTest(result!!)
-        validationTest(result.validationFlow.getAuthenticator(), result)
+        validationTest(result.details.flow.getAuthenticator(), result)
     }
 
     private fun request(body: String): HttpServletRequest {

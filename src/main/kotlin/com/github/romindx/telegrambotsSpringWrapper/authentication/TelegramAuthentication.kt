@@ -17,12 +17,12 @@ class TelegramAuthentication private constructor() : Authentication {
         private set
     internal lateinit var checkString: String
         private set
-    internal lateinit var validationFlow: ValidationFlow
+    internal lateinit var details: AuthenticationDetails
         private set
     override fun getName(): String = principal.username
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> = authoritiesList
     override fun getCredentials(): String = hash
-    override fun getDetails(): ValidationFlow = validationFlow
+    override fun getDetails(): AuthenticationDetails = details
     override fun getPrincipal(): TelegramPrincipal = telegramPrincipal
     override fun isAuthenticated(): Boolean = authenticated
     override fun setAuthenticated(isAuthenticated: Boolean) {
@@ -30,7 +30,7 @@ class TelegramAuthentication private constructor() : Authentication {
     }
 
     internal class Builder {
-        val result = TelegramAuthentication()
+        private val result = TelegramAuthentication()
 
         fun addHash(hash: String): Builder =
             this.also {
@@ -47,9 +47,9 @@ class TelegramAuthentication private constructor() : Authentication {
                 result.checkString = str
             }
 
-        fun addValidationFlow(flow: ValidationFlow): Builder =
+        fun addDetails(details: AuthenticationDetails): Builder =
             this.also {
-                result.validationFlow = flow
+                result.details = details
             }
 
         fun addPrincipal(tgPrincipal: TelegramPrincipal): Builder =
@@ -61,10 +61,10 @@ class TelegramAuthentication private constructor() : Authentication {
 
 }
 
-internal fun ValidationFlow.buildAuthentication(parameters: Map<String, Any>) = TelegramAuthentication
+internal fun ValidationFlow.buildAuthentication(parameters: Map<String, Any>, additionalParameters: Map<String, Array<String>>) = TelegramAuthentication
     .Builder()
     .addHash(parameters["hash"] as? String ?: "")
-    .addValidationFlow(this)
+    .addDetails(AuthenticationDetails(this, additionalParameters))
     .addAuthDate(parameters["auth_date"]
         ?.let {
             when(it) {

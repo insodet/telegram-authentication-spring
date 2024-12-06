@@ -5,6 +5,7 @@ import com.github.romindx.telegrambotsSpringWrapper.authentication.validation.Te
 import jakarta.servlet.ReadListener
 import jakarta.servlet.ServletInputStream
 import jakarta.servlet.http.HttpServletRequest
+import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.core.Is.`is`
 import org.junit.jupiter.api.Test
@@ -28,7 +29,7 @@ class LoginFormGenerationsTests {
             .thenReturn("LoginForm")
         val result = JSONGeneratorTelegram().generate(request)
         authenticationTest(result!!)
-        validationTest(result.validationFlow.getAuthenticator(), result)
+        validationTest(result.details.flow.getAuthenticator(), result)
     }
 
     @Test
@@ -39,7 +40,7 @@ class LoginFormGenerationsTests {
             .thenReturn("LoginForm")
         val result = JSONGeneratorTelegram().generate(request)
         authenticationTest(result!!)
-        validationTest(result.validationFlow.getAuthenticator(), result)
+        validationTest(result.details.flow.getAuthenticator(), result)
     }
 
     private fun validationTest(validator: TelegramAuthenticator, authentication: TelegramAuthentication) {
@@ -65,7 +66,27 @@ class LoginFormGenerationsTests {
         Mockito.`when`(request.getHeader("X-Flow")).thenReturn("LoginForm")
         val authentication = HTMLFormGeneratorTelegram().generate(request)
         authenticationTest(authentication!!)
-        validationTest(authentication.validationFlow.getAuthenticator(), authentication)
+        validationTest(authentication.details.flow.getAuthenticator(), authentication)
+    }
+
+    @Test
+    fun queryParametersTest() {
+        val request = request(formEncoded)
+        Mockito.`when`(request.queryString).thenReturn("text=арутюнов+%25%3A№ПУУ%3AН&win=666&lr=213&clid=1955453&win=672#garbalu")
+        Mockito.`when`(request.getParameter("flow")).thenReturn("LoginForm")
+        val expected = mapOf(
+            "text" to arrayOf("арутюнов %:№ПУУ:Н"),
+            "lr" to arrayOf("213"),
+            "clid" to arrayOf("1955453"),
+            "win" to arrayOf("666","672")
+        )
+        val authentication = HTMLFormGeneratorTelegram().generate(request)
+        expected
+            .entries
+            .forEach{
+                assertThat(authentication!!.details.additionalParams[it.key], equalTo(it.value))
+            }
+        assertThat(authentication!!.details.additionalParams.size, `is`(expected.size))
     }
 
     @Test
@@ -74,7 +95,7 @@ class LoginFormGenerationsTests {
         Mockito.`when`(request.getParameter("flow")).thenReturn("LoginForm")
         val authentication = HTMLFormGeneratorTelegram().generate(request)
         authenticationTest(authentication!!)
-        validationTest(authentication.validationFlow.getAuthenticator(), authentication)
+        validationTest(authentication.details.flow.getAuthenticator(), authentication)
     }
 
     private fun request(body: String): HttpServletRequest {

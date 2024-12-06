@@ -2,6 +2,7 @@ package com.github.romindx.telegrambotsSpringWrapper.authentication.generator
 
 import com.github.romindx.telegrambotsSpringWrapper.authentication.TelegramAuthentication
 import com.github.romindx.telegrambotsSpringWrapper.authentication.buildAuthentication
+import com.github.romindx.telegrambotsSpringWrapper.queryParameters
 import jakarta.servlet.http.HttpServletRequest
 import java.net.URLDecoder
 
@@ -18,6 +19,6 @@ internal class HTMLFormGeneratorTelegram: TelegramAuthenticationGenerator {
                 Pair(parts[0], parts.getOrNull(1) ?: "")
             }
             .let {
-                request.validationFlow?.buildAuthentication(it)
+                request.validationFlow?.buildAuthentication(it, request.queryParameters)
             }
 }

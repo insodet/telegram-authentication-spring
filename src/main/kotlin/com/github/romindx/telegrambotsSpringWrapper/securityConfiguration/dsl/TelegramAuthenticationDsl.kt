@@ -1,55 +1,26 @@
+@file:Suppress("unused")
 package com.github.romindx.telegrambotsSpringWrapper.securityConfiguration.dsl
 
-import com.github.romindx.telegrambotsSpringWrapper.authentication.TelegramAuthentication
-import com.github.romindx.telegrambotsSpringWrapper.authentication.handlers.SuccessValidationHandler
-import com.github.romindx.telegrambotsSpringWrapper.authentication.handlers.TelegramBotTokenResolver
 import com.github.romindx.telegrambotsSpringWrapper.securityConfiguration.builders.TelegramAuthenticationBuilder
+import com.github.romindx.telegrambotsSpringWrapper.securityConfiguration.builders.TelegramFilterConfigurer
 import org.springframework.security.config.annotation.web.HttpSecurityDsl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.core.Authentication
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.security.web.util.matcher.RequestMatcher
 
 class TelegramAuthenticationDsl {
-    private var matcher: RequestMatcher? = null
-    private var tokenResolver: TelegramBotTokenResolver? = null
-    private var successValidationHandler: SuccessValidationHandler? = null
+    private var configs: MutableList<TelegramFilterConfigurer> = mutableListOf()
 
-    fun addPattern(pattern: String) {
-        matcher = AntPathRequestMatcher(pattern, "POST")
+    fun entryPoint(pattern: String, configurer: FilterConfigurerDsl.() -> Unit) {
+        configs.add(FilterConfigurerDsl(pattern).apply(configurer).get())
     }
 
-    fun addMatcher(matcher: RequestMatcher) {
-        this.matcher = matcher
-    }
-
-    fun tokenResolver(resolver: TelegramBotTokenResolver) {
-        this.tokenResolver = resolver
-    }
-
-    fun onSuccessValidation(handler: SuccessValidationHandler) {
-        this.successValidationHandler = handler
-    }
-
-    fun tokenResolver(resolveHandler: (TelegramAuthentication) -> String) {
-        this.tokenResolver = object: TelegramBotTokenResolver {
-            override fun resolve(authentication: TelegramAuthentication): String =
-                resolveHandler(authentication)
-        }
-    }
-
-    fun onSuccessValidation(handler: (TelegramAuthentication)-> Authentication?) {
-        this.successValidationHandler = object: SuccessValidationHandler {
-            override fun onSuccessValidation(authentication: TelegramAuthentication): Authentication? =
-                handler(authentication)
-        }
+    fun entryPoint(matcher: RequestMatcher, configurer: FilterConfigurerDsl.() -> Unit) {
+        configs.add(FilterConfigurerDsl(matcher).apply(configurer).get())
     }
 
     internal fun get(): TelegramAuthenticationBuilder<HttpSecurity>.() -> Unit =
         {
-            this.matcher = this@TelegramAuthenticationDsl.matcher
-            tokenResolver?.also { this.tokenResolver(it) }
-            successValidationHandler?.also { this.onSuccessValidation(it) }
+            this.configs = this@TelegramAuthenticationDsl.configs
         }
 }
 

@@ -3,18 +3,19 @@ package com.github.romindx.telegrambotsSpringWrapper.authentication.generator
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.romindx.telegrambotsSpringWrapper.authentication.TelegramAuthentication
 import com.github.romindx.telegrambotsSpringWrapper.authentication.buildAuthentication
+import com.github.romindx.telegrambotsSpringWrapper.queryParameters
 import jakarta.servlet.http.HttpServletRequest
 
 internal class JSONGeneratorTelegram: TelegramAuthenticationGenerator {
     override fun generate(request: HttpServletRequest): TelegramAuthentication? =
-        request.readAuthentication()
+        request.readAuthentication(request.queryParameters)
 }
 
-private fun HttpServletRequest.readAuthentication() =
+private fun HttpServletRequest.readAuthentication(additionalParams: Map<String, Array<String>>) =
     this.validationFlow?.buildAuthentication(
         ObjectMapper()
             .readTree(this.inputStream)
-            .let {node ->
+            .let { node ->
                 val result = HashMap<String, Any>()
                 node.fields()
                     .forEach { field ->
@@ -30,5 +31,6 @@ private fun HttpServletRequest.readAuthentication() =
                         } ?: ""
                     }
                 result
-            }
+            },
+        additionalParams
     )

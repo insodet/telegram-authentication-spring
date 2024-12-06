@@ -1,27 +1,28 @@
 package com.github.romindx.telegrambotsSpringWrapper.authentication
 
 import com.github.romindx.telegrambotsSpringWrapper.authentication.generator.generateAuthentication
+import com.github.romindx.telegrambotsSpringWrapper.authentication.provider.TelegramAuthenticationProvider
+import com.github.romindx.telegrambotsSpringWrapper.securityConfiguration.builders.TelegramFilterConfigurer
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.web.util.matcher.RequestMatcher
 import org.springframework.web.filter.OncePerRequestFilter
 
 class TelegramAuthenticationFilter(
-    private val matcher: RequestMatcher,
-    private val authManager: AuthenticationManager
+    private val filterConfigurations: List<TelegramFilterConfigurer>
 ): OncePerRequestFilter() {
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        if (matcher.matches(request)) {
+        filterConfigurations
+            .firstOrNull { it.matcher.matches(request) }
+            ?.let { configuration ->
             request
                 .generateAuthentication()
-                ?.let { authManager.authenticate(it) }
+                ?.let { configuration.authenticator.authenticate(it) }
                 ?.let {
                     if (it.isAuthenticated) {
                         SecurityContextHolder.getContext().authentication = it
@@ -33,3 +34,6 @@ class TelegramAuthenticationFilter(
     }
 
 }
+
+private val TelegramFilterConfigurer.authenticator: TelegramAuthenticationProvider
+    get() = TelegramAuthenticationProvider(this.tokenResolver, this.successValidationHandler)

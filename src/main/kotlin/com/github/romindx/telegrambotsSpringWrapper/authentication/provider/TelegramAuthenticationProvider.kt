@@ -17,7 +17,9 @@ internal class TelegramAuthenticationProvider(
             ?.authenticate(tokenResolver)
             ?.let { validAuthentication ->
                 successHandler
-                    ?.let { it.onSuccessValidation(validAuthentication) ?: throw AuthenticationError.ValidationError("Authentication not permitted") } ?: validAuthentication
+                    ?.let {
+                        it.onSuccessValidation(validAuthentication) ?: throw AuthenticationError.ValidationError("Authentication not permitted")
+                    } ?: validAuthentication
             }
 
     override fun supports(authentication: Class<*>?): Boolean =
@@ -26,6 +28,7 @@ internal class TelegramAuthenticationProvider(
 
 private fun TelegramAuthentication.authenticate(tokenResolver: TelegramBotTokenResolver?) =
     details
+        .flow
         .getAuthenticator()
         .authenticate(
             this,
