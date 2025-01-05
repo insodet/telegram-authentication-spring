@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.github.romindx"
-version = "1.10"
+version = "1.11"
 
 java {
 	toolchain {
