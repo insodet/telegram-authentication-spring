@@ -25,21 +25,23 @@ class TelegramAuthenticationFilter(
         filterChain: FilterChain,
     ) {
         try {
-            filterConfigurations
-                .firstOrNull { it.matcher.matches(request) }
-                ?.let { configuration ->
-                    request
-                        .generateAuthentication()
-                        ?.let { configuration.authenticator.authenticate(it) }
-                        ?.let {
-                            if (it.isAuthenticated) {
-                                val newContext = securityContextHolderStrategy.createEmptyContext()
-                                newContext.authentication = it
-                                securityContextRepository.saveContext(newContext, request, response)
+            if (SecurityContextHolder.getContext().authentication == null) {
+                filterConfigurations
+                    .firstOrNull { it.matcher.matches(request) }
+                    ?.let { configuration ->
+                        request
+                            .generateAuthentication()
+                            ?.let { configuration.authenticator.authenticate(it) }
+                            ?.let {
+                                if (it.isAuthenticated) {
+                                    val newContext = securityContextHolderStrategy.createEmptyContext()
+                                    newContext.authentication = it
+                                    securityContextRepository.saveContext(newContext, request, response)
+                                }
                             }
-                        }
-                        ?: throw AuthenticationError.UnexpectedError("Request can't be null")
-                }
+                            ?: throw AuthenticationError.UnexpectedError("Request can't be null")
+                    }
+            }
         } catch (exception: Exception) {
             securityContextHolderStrategy.clearContext()
             throw exception
